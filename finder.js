@@ -1,0 +1,12 @@
+// 22 profile URL patterns + 8 history/search links = 30 finder features. {h} = the handle.
+const PROFILES=[['GitHub','https://github.com/{h}'],['Reddit','https://www.reddit.com/user/{h}'],['X','https://x.com/{h}'],['Instagram','https://www.instagram.com/{h}'],['TikTok','https://www.tiktok.com/@{h}'],['YouTube','https://www.youtube.com/@{h}'],['Twitch','https://www.twitch.tv/{h}'],['Kick','https://kick.com/{h}'],['Steam','https://steamcommunity.com/id/{h}'],['Roblox (search)','https://www.roblox.com/search/users?keyword={h}'],['Xbox (gamertag)','https://xboxgamertag.com/search/{h}'],['PlayStation','https://psnprofiles.com/{h}'],['Minecraft (NameMC)','https://namemc.com/profile/{h}'],['Snapchat','https://www.snapchat.com/add/{h}'],['Telegram','https://t.me/{h}'],['Pinterest','https://www.pinterest.com/{h}'],['SoundCloud','https://soundcloud.com/{h}'],['DeviantArt','https://www.deviantart.com/{h}'],['Itch.io','https://{h}.itch.io'],['Scratch','https://scratch.mit.edu/users/{h}'],['Bluesky','https://bsky.app/profile/{h}.bsky.social'],['Linktree','https://linktr.ee/{h}']];
+const SEARCHES=[['Wayback: x.com','https://web.archive.org/web/*/x.com/{h}'],['Wayback: instagram','https://web.archive.org/web/*/instagram.com/{h}'],['Wayback: youtube','https://web.archive.org/web/*/youtube.com/@{h}'],['Google exact match','https://www.google.com/search?q=%22{h}%22'],['Bing exact match','https://www.bing.com/search?q=%22{h}%22'],['DuckDuckGo exact match','https://duckduckgo.com/?q=%22{h}%22'],['Google: "formerly known as"','https://www.google.com/search?q=%22{h}%22+%22formerly+known+as%22+OR+%22previously%22'],['Reddit search','https://www.reddit.com/search/?q={h}']];
+// Roblox blocks browser CORS, so this uses a third-party mirror. Swap the URL if it goes down.
+const ROBLOX_API='https://users.roproxy.com';
+async function robloxLookup(name){
+ const j=async(u,o)=>{const r=await fetch(u,o);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()};
+ const f=await j(`${ROBLOX_API}/v1/usernames/users`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usernames:[name],excludeBannedUsers:false})});
+ const u=f.data&&f.data[0];if(!u)return 'No Roblox user with that exact name.';
+ const [p,h]=await Promise.all([j(`${ROBLOX_API}/v1/users/${u.id}`),j(`${ROBLOX_API}/v1/users/${u.id}/username-history?limit=50&sortOrder=Desc`)]);
+ return [`name: ${p.name} (display: ${p.displayName})`,`id: ${u.id}`,`created: ${String(p.created).slice(0,10)}`,`past usernames: ${h.data.map(x=>x.name).join(', ')||'none'}`].join('\n');
+}
